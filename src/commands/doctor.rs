@@ -27,18 +27,18 @@ enum IssueType {
 pub fn execute(fix: bool) -> Result<()> {
     let project_root = get_project_root()?;
     let mut config = AgentsConfig::load(&project_root)?;
-    
+
     println!("{}", "Running diagnostics...".cyan().bold());
     println!();
-    
+
     let mut issues = Vec::new();
     let mut seen_names = HashSet::new();
-    
+
     // Check each agent in config
     for agent in &config.agents {
         let local_path = agent.get_local_path(&project_root);
         let link_path = agent.get_link_path(&project_root);
-        
+
         // Check for missing source
         if !local_path.exists() {
             let fixable = matches!(&agent.source, AgentSource::GitHub(_));
@@ -66,7 +66,7 @@ pub fn execute(fix: bool) -> Result<()> {
                 });
             }
         }
-        
+
         // Check for duplicate agents
         if !seen_names.insert(agent.name.clone()) {
             issues.push(Issue {
@@ -77,27 +77,28 @@ pub fn execute(fix: bool) -> Result<()> {
             });
         }
     }
-    
+
     // Check for orphaned symlinks in .claude/agents
     let claude_agents_dir = project_root.join(".claude").join("agents");
     if claude_agents_dir.exists() {
         for entry in fs::read_dir(&claude_agents_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             let name = path
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or("")
                 .to_string();
-            
+
             if path.is_symlink() {
                 // Check if this symlink has a corresponding agent in config
                 if !config.agents.iter().any(|a| a.name == name && a.enabled) {
                     issues.push(Issue {
                         agent_name: name,
                         issue_type: IssueType::OrphanedSymlink,
-                        description: "Symlink exists without corresponding agent in config".to_string(),
+                        description: "Symlink exists without corresponding agent in config"
+                            .to_string(),
                         fixable: true,
                     });
                 }
@@ -106,22 +107,29 @@ pub fn execute(fix: bool) -> Result<()> {
                 issues.push(Issue {
                     agent_name: name,
                     issue_type: IssueType::UnmanagedFile,
-                    description: format!("Regular file in .claude/agents/ should be managed via ccagents"),
+                    description: format!(
+                        "Regular file in .claude/agents/ should be managed via ccagents"
+                    ),
                     fixable: true,
                 });
             }
         }
     }
-    
+
     // Report findings
     if issues.is_empty() {
         println!("{} All checks passed! No issues found.", "✓".green().bold());
         return Ok(());
     }
-    
-    println!("{} Found {} issue{}:", "⚠".yellow().bold(), issues.len(), if issues.len() == 1 { "" } else { "s" });
+
+    println!(
+        "{} Found {} issue{}:",
+        "⚠".yellow().bold(),
+        issues.len(),
+        if issues.len() == 1 { "" } else { "s" }
+    );
     println!();
-    
+
     for issue in &issues {
         let icon = match issue.issue_type {
             IssueType::MissingSource => "✗".red(),
@@ -130,35 +138,44 @@ pub fn execute(fix: bool) -> Result<()> {
             IssueType::OrphanedSymlink => "○".yellow(),
             IssueType::UnmanagedFile => "◆".blue(),
         };
-        
-        println!("  {} {} - {}", icon, issue.agent_name.bold(), issue.description);
-        
+
+        println!(
+            "  {} {} - {}",
+            icon,
+            issue.agent_name.bold(),
+            issue.description
+        );
+
         if issue.fixable {
             println!("    {} This issue can be fixed automatically", "→".green());
         } else {
             println!("    {} Manual intervention required", "→".red());
         }
     }
-    
+
     // Apply fixes if requested
     if fix {
         println!();
         println!("{}", "Applying fixes...".cyan().bold());
-        
+
         let mut fixed_count = 0;
         let mut config_modified = false;
-        
+
         for issue in &issues {
             if !issue.fixable {
                 continue;
             }
-            
+
             match issue.issue_type {
                 IssueType::MissingSource => {
                     // For GitHub sources, we could re-download, but for now we'll remove
                     config.agents.retain(|a| a.name != issue.agent_name);
                     config_modified = true;
-                    println!("  {} Removed agent with missing source: {}", "✓".green(), issue.agent_name);
+                    println!(
+                        "  {} Removed agent with missing source: {}",
+                        "✓".green(),
+                        issue.agent_name
+                    );
                     fixed_count += 1;
                 }
                 IssueType::BrokenSymlink => {
@@ -166,11 +183,15 @@ pub fn execute(fix: bool) -> Result<()> {
                     if let Some(agent) = config.agents.iter().find(|a| a.name == issue.agent_name) {
                         let link_path = agent.get_link_path(&project_root);
                         let local_path = agent.get_local_path(&project_root);
-                        
+
                         remove_symlink(&link_path).ok();
                         if local_path.exists() {
                             create_symlink(&local_path, &link_path)?;
-                            println!("  {} Fixed broken symlink: {}", "✓".green(), issue.agent_name);
+                            println!(
+                                "  {} Fixed broken symlink: {}",
+                                "✓".green(),
+                                issue.agent_name
+                            );
                             fixed_count += 1;
                         }
                     }
@@ -180,10 +201,14 @@ pub fn execute(fix: bool) -> Result<()> {
                     if let Some(agent) = config.agents.iter().find(|a| a.name == issue.agent_name) {
                         let link_path = agent.get_link_path(&project_root);
                         let local_path = agent.get_local_path(&project_root);
-                        
+
                         ensure_claude_agents_dir(&project_root)?;
                         create_symlink(&local_path, &link_path)?;
-                        println!("  {} Created missing symlink: {}", "✓".green(), issue.agent_name);
+                        println!(
+                            "  {} Created missing symlink: {}",
+                            "✓".green(),
+                            issue.agent_name
+                        );
                         fixed_count += 1;
                     }
                 }
@@ -192,14 +217,22 @@ pub fn execute(fix: bool) -> Result<()> {
                     let mut seen = HashSet::new();
                     config.agents.retain(|a| seen.insert(a.name.clone()));
                     config_modified = true;
-                    println!("  {} Removed duplicate agent: {}", "✓".green(), issue.agent_name);
+                    println!(
+                        "  {} Removed duplicate agent: {}",
+                        "✓".green(),
+                        issue.agent_name
+                    );
                     fixed_count += 1;
                 }
                 IssueType::OrphanedSymlink => {
                     // Remove the orphaned symlink
                     let link_path = claude_agents_dir.join(&issue.agent_name);
                     remove_symlink(&link_path).ok();
-                    println!("  {} Removed orphaned symlink: {}", "✓".green(), issue.agent_name);
+                    println!(
+                        "  {} Removed orphaned symlink: {}",
+                        "✓".green(),
+                        issue.agent_name
+                    );
                     fixed_count += 1;
                 }
                 IssueType::UnmanagedFile => {
@@ -209,21 +242,26 @@ pub fn execute(fix: bool) -> Result<()> {
                 }
             }
         }
-        
+
         if config_modified {
             config.save(&project_root)?;
         }
-        
+
         println!();
-        println!("{} Fixed {} of {} issue{}", 
-            "✓".green().bold(), 
-            fixed_count, 
+        println!(
+            "{} Fixed {} of {} issue{}",
+            "✓".green().bold(),
+            fixed_count,
             issues.len(),
-            if issues.len() == 1 { "" } else { "s" });
+            if issues.len() == 1 { "" } else { "s" }
+        );
     } else {
         println!();
-        println!("Run {} to automatically fix these issues", "ccagents doctor --fix".cyan());
+        println!(
+            "Run {} to automatically fix these issues",
+            "ccagents doctor --fix".cyan()
+        );
     }
-    
+
     Ok(())
 }

@@ -36,19 +36,21 @@ impl Agent {
 
     pub fn from_url(url: &str) -> anyhow::Result<Self> {
         let parsed_url = url::Url::parse(url)?;
-        
+
         // Extract agent name from URL
         let name = if parsed_url.host_str() == Some("github.com") {
-            let segments: Vec<&str> = parsed_url.path()
+            let segments: Vec<&str> = parsed_url
+                .path()
                 .trim_start_matches('/')
                 .split('/')
                 .filter(|s| !s.is_empty())
                 .collect();
-            
+
             // We only support file URLs (with /blob/)
             if segments.len() >= 5 && segments[2] == "blob" {
                 // Use the filename
-                segments.last()
+                segments
+                    .last()
                     .ok_or_else(|| anyhow::anyhow!("No filename in URL"))?
                     .to_string()
             } else {
@@ -98,7 +100,7 @@ mod tests {
             "test-agent".to_string(),
             AgentSource::Local(PathBuf::from("path/to/agent")),
         );
-        
+
         assert_eq!(agent.name, "test-agent");
         assert!(agent.enabled);
         matches!(agent.source, AgentSource::Local(_));
@@ -108,10 +110,10 @@ mod tests {
     fn test_agent_from_path() {
         let path = Path::new("test-agent.md");
         let agent = Agent::from_path(path).unwrap();
-        
+
         assert_eq!(agent.name, "test-agent.md");
         assert!(agent.enabled);
-        
+
         if let AgentSource::Local(p) = &agent.source {
             assert_eq!(p, Path::new("test-agent.md"));
         } else {
@@ -123,16 +125,19 @@ mod tests {
     fn test_agent_from_github_repo_url_fails() {
         let url = "https://github.com/user/agent-repo";
         let result = Agent::from_url(url);
-        
+
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Only direct file links"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Only direct file links"));
     }
 
     #[test]
     fn test_agent_from_github_repo_with_git_suffix_fails() {
         let url = "https://github.com/user/agent-repo.git";
         let result = Agent::from_url(url);
-        
+
         assert!(result.is_err());
     }
 
@@ -140,10 +145,10 @@ mod tests {
     fn test_agent_from_github_file_url() {
         let url = "https://github.com/user/repo/blob/main/agents/backend-developer.md";
         let agent = Agent::from_url(url).unwrap();
-        
+
         assert_eq!(agent.name, "backend-developer.md");
         assert!(agent.enabled);
-        
+
         if let AgentSource::GitHub(u) = &agent.source {
             assert_eq!(u, url);
         } else {
@@ -155,7 +160,7 @@ mod tests {
     fn test_agent_from_github_nested_file_url() {
         let url = "https://github.com/vijaythecoder/awesome-claude-agents/blob/main/agents/universal/backend-developer.md";
         let agent = Agent::from_url(url).unwrap();
-        
+
         assert_eq!(agent.name, "backend-developer.md");
     }
 
@@ -166,7 +171,7 @@ mod tests {
             AgentSource::Local(PathBuf::from("relative/path")),
         );
         let project_root = Path::new("/project");
-        
+
         assert_eq!(
             agent.get_local_path(project_root),
             PathBuf::from("/project/relative/path")
@@ -180,7 +185,7 @@ mod tests {
             AgentSource::Local(PathBuf::from("/absolute/path")),
         );
         let project_root = Path::new("/project");
-        
+
         assert_eq!(
             agent.get_local_path(project_root),
             PathBuf::from("/absolute/path")
@@ -194,7 +199,7 @@ mod tests {
             AgentSource::GitHub("https://github.com/user/repo".to_string()),
         );
         let project_root = Path::new("/project");
-        
+
         assert_eq!(
             agent.get_local_path(project_root),
             PathBuf::from("/project/.ccagents/repo-name")
@@ -208,7 +213,7 @@ mod tests {
             AgentSource::Local(PathBuf::from("path")),
         );
         let project_root = Path::new("/project");
-        
+
         assert_eq!(
             agent.get_link_path(project_root),
             PathBuf::from("/project/.claude/agents/test-agent")

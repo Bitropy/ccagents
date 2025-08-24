@@ -36,13 +36,13 @@ fn main() {
     if let Some(describe) = git_describe {
         println!("cargo:rustc-env=GIT_DESCRIBE={}", describe);
     }
-    
+
     if let Some(hash) = git_hash {
         println!("cargo:rustc-env=GIT_HASH={}", hash);
     }
-    
+
     println!("cargo:rustc-env=BUILD_TIMESTAMP={}", build_timestamp);
-    
+
     // Rebuild if git HEAD changes
     println!("cargo:rerun-if-changed=.git/HEAD");
 }
