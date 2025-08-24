@@ -107,9 +107,8 @@ pub fn execute(fix: bool) -> Result<()> {
                 issues.push(Issue {
                     agent_name: name,
                     issue_type: IssueType::UnmanagedFile,
-                    description: format!(
-                        "Regular file in .claude/agents/ should be managed via ccagents"
-                    ),
+                    description: "Regular file in .claude/agents/ should be managed via ccagents"
+                        .to_string(),
                     fixable: true,
                 });
             }

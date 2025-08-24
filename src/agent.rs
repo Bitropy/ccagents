@@ -63,7 +63,7 @@ impl Agent {
             // For non-GitHub URLs, use the last segment as filename
             parsed_url
                 .path_segments()
-                .and_then(|segments| segments.last())
+                .and_then(|mut segments| segments.next_back())
                 .ok_or_else(|| anyhow::anyhow!("Invalid URL"))?
                 .to_string()
         };
