@@ -1,0 +1,33 @@
+[package]
+name = "ccagents"
+version = "0.1.0"
+edition = "2025"
+authors = ["Darek Dwornikowski"]
+description = "CLI tool for managing Claude Code agents in local projects"
+repository = "https://github.com/bitropy/ccagents"
+homepage = "https://github.com/bitropy/ccagents"
+readme = "README.md"
+keywords = ["claude", "agents", "cli", "management", "AI"]
+categories = ["command-line-utilities", "development-tools"]
+license = "MIT"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+reqwest = { version = "0.11", features = ["json", "stream"] }
+anyhow = "1.0"
+colored = "2.1"
+dirs = "5.0"
+indicatif = "0.17"
+futures-util = "0.3"
+url = "2.5"
+zip = "0.6"
+
+[build-dependencies]
+chrono = "0.4"
+
+[dev-dependencies]
+tempfile = "3.8"
+mockito = "1.2"
