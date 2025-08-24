@@ -3,7 +3,7 @@ use std::process::Command;
 fn main() {
     // Try to get git describe output for detailed version
     let git_describe = Command::new("git")
-        .args(&["describe", "--tags", "--always", "--dirty"])
+        .args(["describe", "--tags", "--always", "--dirty"])
         .output()
         .ok()
         .and_then(|output| {
@@ -17,7 +17,7 @@ fn main() {
 
     // Try to get git commit hash
     let git_hash = Command::new("git")
-        .args(&["rev-parse", "--short", "HEAD"])
+        .args(["rev-parse", "--short", "HEAD"])
         .output()
         .ok()
         .and_then(|output| {
