@@ -1,8 +1,13 @@
 # ccagents
 
+[![Crates.io](https://img.shields.io/crates/v/ccagents.svg)](https://crates.io/crates/ccagents)
+[![Documentation](https://docs.rs/ccagents/badge.svg)](https://docs.rs/ccagents)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/Bitropy/ccagents/actions/workflows/ci.yml/badge.svg)](https://github.com/Bitropy/ccagents/actions/workflows/ci.yml)
+
 > Manage Claude Code agents in your local projects with ease
 
-`ccagents` is a Rust CLI tool that helps you manage [Claude Code](https://claude.ai/code) project agents by creating symlinks, handling configuration, and downloading agents from GitHub. It ensures your agents are portable across enviroments. 
+`ccagents` is a Rust CLI tool that helps you manage [Claude Code](https://claude.ai/code) agents by creating symlinks, handling configuration, and downloading agents from GitHub. It ensures your agents are portable across different environments and team members. 
 
 ## Features
 
