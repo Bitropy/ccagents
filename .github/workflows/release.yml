@@ -30,11 +30,6 @@ jobs:
             binary_name: ccagents
             asset_name: ccagents-linux-arm64
           
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            binary_name: ccagents.exe
-            asset_name: ccagents-windows-amd64
-          
           - os: macos-latest
             target: x86_64-apple-darwin
             binary_name: ccagents
@@ -81,15 +76,6 @@ jobs:
         cd ../../../
         sha256sum ${{ matrix.asset_name }}.tar.gz > ${{ matrix.asset_name }}.tar.gz.sha256
     
-    - name: Create archive (Windows)
-      if: matrix.os == 'windows-latest'
-      shell: powershell
-      run: |
-        cd target/${{ matrix.target }}/release
-        Compress-Archive -Path ${{ matrix.binary_name }} -DestinationPath ../../../${{ matrix.asset_name }}.zip
-        cd ../../../
-        Get-FileHash ${{ matrix.asset_name }}.zip -Algorithm SHA256 | Out-File -FilePath ${{ matrix.asset_name }}.zip.sha256
-    
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -97,8 +83,6 @@ jobs:
         path: |
           *.tar.gz
           *.tar.gz.sha256
-          *.zip
-          *.zip.sha256
 
   release:
     name: Create Release
