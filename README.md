@@ -194,6 +194,14 @@ your-project/
 - `● enabled` - Agent is enabled
 - `○ disabled` - Agent is disabled
 
+## Roadmap
+
+- Simple sub-gent registry 
+- Agents via local socket 
+- Provide a use case for sockat/remote agents hosted via API 
+
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
